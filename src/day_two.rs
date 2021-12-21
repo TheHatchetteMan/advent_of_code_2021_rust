@@ -7,7 +7,7 @@ pub fn day_two() {
     let lines = lines_from_file("src/day_two_data");
 
     for line in lines {
-        let split = line.split(" ");
+        let split = line.split(' ');
         let mut direction = "";
         let mut amount = 0;
         for s in split {
@@ -46,7 +46,7 @@ pub fn day_two_2() {
     let lines = lines_from_file("src/day_two_data");
 
     for line in lines {
-        let split = line.split(" ");
+        let split = line.split(' ');
         let mut direction = "";
         let mut amount = 0;
         for s in split {
@@ -61,7 +61,7 @@ pub fn day_two_2() {
             "forward" => {
                 horizontal += amount;
                 depth += amount * aim;
-            },
+            }
             "down" => aim += amount,
             "up" => aim -= amount,
             _ => continue,
