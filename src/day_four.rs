@@ -2,69 +2,156 @@ use crate::functions::lines_from_file;
 use std::collections::HashMap;
 use std::slice::SliceIndex;
 
-struct board_number {
-    value: i32,
-    called: bool,
-}
-
-struct board {
-    line1: Vec<board_number>,
-    line2: Vec<board_number>,
-    line3: Vec<board_number>,
-    line4: Vec<board_number>,
-    line5: Vec<board_number>,
-}
-
 pub fn day_four() {
-    let lines = lines_from_file("src/day_four_data");
-    let mut called_numbers = "";
-    let mut boards: Vec<Vec<&str>> = Vec::new();
-    let mut board_count = 0;
+    // Read in the lines from the file
+    let mut lines = lines_from_file("src/day_four_data");
 
-    //Read first line into called numbers
-    for index in 0..1 {
-        called_numbers = &lines[index];
-    }
-    // Verify we are getting the first line
-    println!("Called Numbers: {}", called_numbers);
+    // Read the first line into choices, these are the called bingo numbers
+    let choices = lines
+        .drain(0..1)
+        .collect::<String>()
+        .split(',')
+        .map(|s| s.to_owned())
+        .collect::<Vec<_>>();
 
-    // Read data into vectors
-    /*let mut index = 0;
-    let size: usize = 601;
-    while &index < &size {
-        if lines[&index].is_empty() {
-            board_count += 1;
-            &index += 1;
-        }
-        else {
-            boards[&index].line1[0] = board_number(&lines[index]);
-            boards
-        }
-    }*/
-    let mut b = HashMap::new();
-    b.insert(1, (1, 2, 3, 4, 5));
-    b.insert(2, (1, 2, 3, 4, 5));
-    b.insert(3, (1, 2, 3, 4, 5));
-    b.insert(4, (1, 2, 3, 4, 5));
-    b.insert(5, (1, 2, 3, 4, 5));
-    // Verify hash map worked correctly
-    println!("Hash Map: {:?}", b);
-
-    let mut indie = 0;
-    for index in 1..601 {
-        if !lines[index].is_empty() {
-            let mut row: Vec<&str> = Vec::new();
-            let s = lines[index].split(",");
-            for st in s {
-                row.push(st);
+    // Read the remaining lines into chunks of 5 to indicate the boards
+    let mut boards = lines
+        .as_slice()
+        .chunks(5)
+        .map(|chunk| {
+            let mut board = HashMap::new();
+            for (y, line) in chunk.iter().enumerate() {
+                for (x, num) in line.split(' ').filter(|c| !c.is_empty()).enumerate() {
+                    board.insert((x, y), (num, false));
+                }
             }
-            // Verify row process
-            println!("row: {:?}", row);
-            boards.push(row);
+
+            board
+        })
+        .collect::<Vec<_>>();
+
+    // Determine the winning board
+    for choice in choices {
+        for board in boards.iter_mut() {
+            for cell in board.iter_mut() {
+                if cell.1 .0  == choice {
+                    cell.1 .1 = true;
+                }
+            }
+
+            let mut winner = false;
+            for y in 0..5 {
+                let mut row = true;
+                for x in 0..5 {
+                    row = row && board[&(x, y)].1
+                }
+                if row {
+                    winner = true;
+                    break;
+                }
+            }
+
+            for x in 0..5 {
+                let mut col = true;
+                for y in 0..5 {
+                    col = col && board[&(x, y)].1
+                }
+                if col {
+                    winner = true;
+                    break;
+                }
+            }
+
+            if winner {
+                let sum = board
+                    .values()
+                    .filter(|v| !v.1)
+                    .map(|v| v.0.parse::<u64>().unwrap())
+                    .sum::<u64>();
+
+                println!("Bingo Score: {}", sum * (choice.parse::<u64>().unwrap()));
+
+                return;
+            }
         }
-        else {indie += 1;}
     }
-    // Verify boards function
-    println!("boards: {:?}", boards);
-    //println!("Indie: {}", indie);
+}
+
+pub fn day_four_2 () {
+    // Read in the lines from the file
+    let mut lines = lines_from_file("src/day_four_data");
+
+    // Read the first line into choices, these are the called bingo numbers
+    let choices = lines
+        .drain(0..1)
+        .collect::<String>()
+        .split(',')
+        .map(|s| s.to_owned())
+        .collect::<Vec<_>>();
+
+    // Read the remaining lines into chunks of 5 to indicate the boards
+    let mut boards = lines
+        .as_slice()
+        .chunks(5)
+        .map(|chunk| {
+            let mut board = HashMap::new();
+            for (y, line) in chunk.iter().enumerate() {
+                for (x, num) in line.split(' ').filter(|c| !c.is_empty()).enumerate() {
+                    board.insert((x, y), (num, false));
+                }
+            }
+
+            board
+        })
+        .collect::<Vec<_>>();
+
+    let mut won = vec![false; boards.len()];
+    for choice in choices {
+        for (board_num, board) in boards.iter_mut().enumerate() {
+            for cell in board.iter_mut() {
+                if cell.1 .0 == choice {
+                    cell.1 .1 = true;
+                }
+            }
+
+            let mut winner = false;
+            for y in 0..5 {
+                let mut row = true;
+                for x in 0..5 {
+                    row = row && board[&(x, y)].1
+                }
+                if row {
+                    winner = true;
+                    break;
+                }
+            }
+
+            for x in 0..5 {
+                let mut col = true;
+                for y in 0..5 {
+                    col = col && board[&(x, y)].1
+                }
+                if col {
+                    winner = true;
+                    break;
+                }
+            }
+
+            if winner {
+                if !won[board_num] && won.iter().filter(|p| !**p).count() == 1 {
+                    let sum = board
+                        .values()
+                        .filter(|v| !v.1)
+                        .map(|v| v.0.parse::<u64>().unwrap())
+                        .sum::<u64>();
+
+                    println!("{}", sum * (choice.parse::<u64>().unwrap()));
+
+                    return;
+                } else {
+                    won[board_num] = true;
+                }
+            }
+        }
+    }
 }
